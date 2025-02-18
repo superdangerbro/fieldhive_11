@@ -7,7 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { store } from './store';
 import Layout from './components/Layout';
 import MapView from './components/MapView';
-import FormList from './components/FormList';
+import SectionManager from './components/SectionManager';
 
 const theme = createTheme({
   palette: {
@@ -33,7 +33,7 @@ function App() {
             <Layout>
               <Routes>
                 <Route path="/" element={<MapView />} />
-                <Route path="/forms" element={<FormList />} />
+                <Route path="/forms" element={<SectionManager />} />
               </Routes>
             </Layout>
           </Router>

@@ -1,9 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
+import schemaReducer from './slices/schemaSlice';
 
 export const store = configureStore({
   reducer: {
-    // We'll add reducers as we build features
+    schema: schemaReducer,
   },
 });
 

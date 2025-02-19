@@ -100,6 +100,8 @@ MAPBOX_TOKEN=your-mapbox-token
 - Offline sync < 30s
 - Map render < 2s
 - Form submission < 1s
+- Photo upload/optimization < 2s
+- Average photo size < 300KB
 
 ## Security Requirements
 - HTTPS everywhere
@@ -122,4 +124,17 @@ MAPBOX_TOKEN=your-mapbox-token
 - Component documentation
 - Database schema
 - Deployment guides
-- User guides 
+- User guides
+
+### Storage
+- **Service**: Supabase Storage
+- **Buckets**:
+  - `icons`: Map feature type icons (PNG, SVG, WebP)
+  - `floor_plans`: Building floor plans (PNG, JPG, WebP, PDF)
+  - `form_photos`: Inspection photos with optimization
+- **Image Optimization**:
+  - Max dimensions: 1080x1080px
+  - WebP format
+  - 50% quality compression
+  - Automatic aspect ratio preservation
+  - Client-side optimization using Canvas API 

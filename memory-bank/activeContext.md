@@ -3,6 +3,15 @@
 ## Current Focus
 Initial project setup and foundation laying
 
+## Code Preservation Rules
+- Never overwrite or completely rewrite existing components without explicit user confirmation
+- Ask for permission to save current work before making significant changes
+- Preserve unrelated functionality when updating components
+- Get explicit confirmation before making major component modifications
+- When working on a specific feature, avoid modifying unrelated code
+- Document any necessary component rewrites in the commit message
+- Keep a backup of critical components before major changes
+
 ## Recent Changes
 - Created Memory Bank structure
 - Defined project requirements

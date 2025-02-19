@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/supabase';
 
@@ -41,4 +43,37 @@ export const storage = {
   icons: supabase.storage.from('icons'),
   floorPlans: supabase.storage.from('floor_plans'),
   photos: supabase.storage.from('form_photos')
+};
+
+// Auth helper functions
+export const auth = {
+  signIn: async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) throw error;
+    return data;
+  },
+
+  signUp: async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+    if (error) throw error;
+    return data;
+  },
+
+  signOut: async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  },
+
+  getSession: () => supabase.auth.getSession(),
+  
+  onAuthStateChange: (callback: (event: 'SIGNED_IN' | 'SIGNED_OUT', session: any) => void) => 
+    supabase.auth.onAuthStateChange((event, session) => {
+      callback(event as 'SIGNED_IN' | 'SIGNED_OUT', session);
+    }),
 };

@@ -60,15 +60,25 @@ export default function SectionManager() {
   }, [dispatch]);
 
   const handleAddSection = async () => {
+    if (!newSection.name.trim()) return;
+
     try {
-      await dispatch(createSection({
-        name: newSection.name,
-        description: newSection.description || null,
+      const result = await dispatch(createSection({
+        name: newSection.name.trim(),
+        description: newSection.description?.trim() || null,
       })).unwrap();
-      setNewSection({ name: '', description: '' });
-      setOpenDialog(false);
+
+      if (result) {
+        setNewSection({ name: '', description: '' });
+        setOpenDialog(false);
+      }
     } catch (error) {
       console.error('Failed to create section:', error);
+      if (error instanceof Error) {
+        dispatch({ type: 'schema/setError', payload: error.message });
+      } else {
+        dispatch({ type: 'schema/setError', payload: 'Failed to create section' });
+      }
     }
   };
 

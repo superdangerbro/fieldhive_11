@@ -1,129 +1,149 @@
-import * as React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Box } from '@mui/material';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { Box, ToggleButtonGroup, ToggleButton, Paper } from '@mui/material';
-import { Map as MapIcon, Terrain, NightsStay } from '@mui/icons-material';
 
-// Set Mapbox token
-mapboxgl.accessToken = 'pk.eyJ1IjoiaHVtYW5lLXNvbHV0aW9ucyIsImEiOiJja3V0MzdlYzcwMmM0Mm9sZm1idW9jODNvIn0.cuGK4uYv9GRpHAO4U3Utyw';
+// Set your Mapbox token
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
-const BASEMAPS = {
-  streets: 'mapbox://styles/mapbox/streets-v11',
-  satellite: 'mapbox://styles/mapbox/satellite-streets-v11',
+const BASEMAP_STYLES = {
+  streets: 'mapbox://styles/mapbox/streets-v12',
+  satellite: 'mapbox://styles/mapbox/satellite-streets-v12',
   night: 'mapbox://styles/mapbox/navigation-night-v1',
 } as const;
 
-type BasemapType = keyof typeof BASEMAPS;
+type BasemapStyle = keyof typeof BASEMAP_STYLES;
+
+class MapboxStyleSwitcherControl {
+  private map?: mapboxgl.Map;
+  private container?: HTMLDivElement;
+  private styleButton?: HTMLButtonElement;
+
+  onAdd(map: mapboxgl.Map) {
+    this.map = map;
+    this.container = document.createElement('div');
+    this.container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
+    
+    this.styleButton = document.createElement('button');
+    this.styleButton.className = 'mapboxgl-ctrl-icon mapboxgl-style-switcher';
+    this.styleButton.type = 'button';
+    this.styleButton.style.backgroundImage = 'url("data:image/svg+xml;charset=utf-8,%3Csvg width=\'29\' height=\'29\' viewBox=\'0 0 29 29\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M10.5 14l4-8 4 8h-8z\'/%3E%3Cpath d=\'M10.5 16l4 8 4-8h-8z\' fill=\'%23666\'/%3E%3C/svg%3E")';
+    this.styleButton.style.backgroundSize = '70%';
+    this.styleButton.style.backgroundPosition = 'center';
+    this.styleButton.style.backgroundRepeat = 'no-repeat';
+    
+    let currentStyleIndex = 0;
+    const styles = Object.values(BASEMAP_STYLES);
+    
+    this.styleButton.addEventListener('click', () => {
+      currentStyleIndex = (currentStyleIndex + 1) % styles.length;
+      this.map?.setStyle(styles[currentStyleIndex]);
+    });
+    
+    this.container.appendChild(this.styleButton);
+    return this.container;
+  }
+
+  onRemove() {
+    this.container?.parentNode?.removeChild(this.container);
+    this.map = undefined;
+  }
+}
 
 export default function MapView() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [basemap, setBasemap] = useState<BasemapType>('night');
-  const [mapInitialized, setMapInitialized] = useState(false);
+  const [basemap, setBasemap] = useState<BasemapStyle>('night');
+  const geolocateControl = useRef<mapboxgl.GeolocateControl | null>(null);
 
-  // Initialize map
   useEffect(() => {
-    if (!mapContainer.current || map.current) return;
+    if (!mapContainer.current) return;
 
-    try {
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: BASEMAPS[basemap],
-        center: [-74.5, 40],
-        zoom: 9
-      });
+    // Initialize map
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: BASEMAP_STYLES[basemap],
+      center: [-74.5, 40],
+      zoom: 9,
+    });
 
-      map.current.on('load', () => {
-        setMapInitialized(true);
-      });
+    // Add navigation control (zoom and rotation)
+    map.current.addControl(
+      new mapboxgl.NavigationControl(),
+      'top-right'
+    );
 
-      // Add navigation control
-      map.current.addControl(new mapboxgl.NavigationControl({
-        showCompass: true,
-        showZoom: true,
-        visualizePitch: true
-      }), 'bottom-right');
+    // Add geolocate control
+    geolocateControl.current = new mapboxgl.GeolocateControl({
+      positionOptions: {
+        enableHighAccuracy: true
+      },
+      trackUserLocation: true,
+      showUserHeading: true
+    });
+    map.current.addControl(geolocateControl.current, 'top-right');
 
-      // Add geolocate control
-      map.current.addControl(new mapboxgl.GeolocateControl({
-        positionOptions: {
-          enableHighAccuracy: true
-        },
-        trackUserLocation: true,
-        showUserHeading: true
-      }), 'bottom-right');
-    } catch (error) {
-      console.error('Error initializing map:', error);
-    }
+    // Add style switcher control
+    map.current.addControl(
+      new MapboxStyleSwitcherControl(),
+      'top-right'
+    );
 
+    // Add scale control
+    map.current.addControl(
+      new mapboxgl.ScaleControl(),
+      'bottom-right'
+    );
+
+    // Add fullscreen control
+    map.current.addControl(
+      new mapboxgl.FullscreenControl(),
+      'top-right'
+    );
+
+    // Cleanup
     return () => {
       if (map.current) {
         map.current.remove();
-        map.current = null;
       }
     };
   }, []);
 
-  // Handle basemap changes
-  useEffect(() => {
-    if (map.current && mapInitialized) {
-      try {
-        map.current.setStyle(BASEMAPS[basemap]);
-      } catch (error) {
-        console.error('Error changing basemap:', error);
-      }
-    }
-  }, [basemap, mapInitialized]);
-
-  const handleBasemapChange = (_: React.MouseEvent<HTMLElement>, newBasemap: BasemapType | null) => {
-    if (newBasemap) {
-      setBasemap(newBasemap);
-    }
-  };
-
   return (
-    <Box sx={{ position: 'relative', height: 'calc(100vh - 88px)' }}>
+    <Box sx={{ 
+      height: '100%', 
+      width: '100%', 
+      position: 'relative',
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
       <Box
         ref={mapContainer}
         sx={{
-          position: 'absolute',
-          top: 0,
-          bottom: 0,
-          width: '100%'
+          flexGrow: 1,
+          width: '100%',
+          '& .mapboxgl-ctrl-group': {
+            marginBottom: '10px'
+          },
+          '& .mapboxgl-style-switcher': {
+            width: '30px',
+            height: '30px',
+            cursor: 'pointer'
+          },
+          '& .mapboxgl-ctrl-top-right': {
+            top: '10px',
+            right: '10px',
+            '& .mapboxgl-ctrl': {
+              marginBottom: '10px'
+            }
+          },
+          '& .mapboxgl-ctrl-bottom-right': {
+            bottom: '10px',
+            right: '10px'
+          }
         }}
       />
-      
-      {/* Basemap Switcher */}
-      <Paper
-        elevation={3}
-        sx={{
-          position: 'absolute',
-          top: 16,
-          right: 16,
-          zIndex: 1,
-          p: 0.5,
-          backgroundColor: 'rgba(255, 255, 255, 0.9)'
-        }}
-      >
-        <ToggleButtonGroup
-          value={basemap}
-          exclusive
-          onChange={handleBasemapChange}
-          size="small"
-          orientation="vertical"
-        >
-          <ToggleButton value="streets" aria-label="streets">
-            <MapIcon />
-          </ToggleButton>
-          <ToggleButton value="satellite" aria-label="satellite">
-            <Terrain />
-          </ToggleButton>
-          <ToggleButton value="night" aria-label="night">
-            <NightsStay />
-          </ToggleButton>
-        </ToggleButtonGroup>
-      </Paper>
     </Box>
   );
 } 

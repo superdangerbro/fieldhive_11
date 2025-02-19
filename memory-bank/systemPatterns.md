@@ -87,7 +87,16 @@ flowchart TD
   "version": "number",
   "schema": "object",
   "uiSchema": "object",
-  "validationRules": "array"
+  "validationRules": "array",
+  "attachments": [{
+    "type": "photo",
+    "path": "string",
+    "metadata": {
+      "location": "object",
+      "timestamp": "string",
+      "optimized": "boolean"
+    }
+  }]
 }
 ```
 
@@ -97,6 +106,73 @@ flowchart TD
 - Data encryption at rest
 - Secure file handling
 - API rate limiting
+
+## Performance Patterns
+- Lazy loading of components
+- Progressive loading of map data
+- Efficient form rendering
+- Optimized database queries
+- Caching strategies
+
+## Error Handling
+- Graceful degradation
+- Retry mechanisms
+- Error boundaries
+- Logging and monitoring
+- User feedback systems
+
+## Code Preservation Patterns
+```mermaid
+flowchart TD
+    Change[Change Request] --> Assess[Assess Impact]
+    Assess --> Confirm{Need Confirmation?}
+    Confirm -->|Yes| GetApproval[Get User Approval]
+    Confirm -->|No| Proceed[Proceed with Change]
+    GetApproval -->|Approved| Backup[Create Backup]
+    Backup --> Implement[Implement Change]
+    Implement --> Test[Test & Verify]
+    Test --> Document[Document Changes]
+```
+
+### Key Principles
+- Never overwrite components without explicit confirmation
+- Preserve unrelated functionality
+- Document component changes thoroughly
+- Maintain component backups for critical changes
+- Isolate feature-specific modifications
+- Get approval for major modifications
+- Save current work before significant changes
+
+### Implementation Guidelines
+- Create component backups before major rewrites
+- Use version control effectively
+- Document changes in commit messages
+- Test preserved functionality
+- Maintain component independence
+- Follow the principle of least surprise
+- Keep changes focused and minimal
+
+### Storage Patterns
+```mermaid
+flowchart TD
+    Upload[File Upload] --> Optimize[Image Optimization]
+    Optimize --> Store[Storage Bucket]
+    Store --> DB[Database Record]
+    DB --> URL[Public URL]
+```
+
+- Client-side optimization
+- Bucket-based storage
+- File type validation
+- Automatic cleanup
+- URL-based access
+
+### File Handling
+- Image optimization pipeline
+- Secure file uploads
+- Polymorphic relationships
+- Metadata tracking
+- Location tagging
 
 ## Performance Patterns
 - Lazy loading of components

@@ -11,39 +11,124 @@ model User {
   id        String   @id @default(uuid())
   email     String   @unique
   name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
   forms     Form[]
+
+  @@map("users")
 }
 
 model Form {
   id          String       @id @default(uuid())
   name        String
   schema      Json
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  userId      String       @map("user_id")
   createdBy   User         @relation(fields: [userId], references: [id])
-  userId      String
   submissions Submission[]
+
+  @@map("forms")
+}
+
+model Section {
+  id              String           @id @default(uuid())
+  name            String
+  description     String?
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  mapFeatureTypes MapFeatureType[]
+
+  @@map("sections")
+}
+
+model MapFeatureType {
+  id             String       @id @default(uuid())
+  sectionId      String       @map("section_id")
+  name           String
+  description    String?
+  geometryType   String       @map("geometry_type")
+  style          Json
+  featureForm    Json         @map("feature_form")
+  inspectionForm Json?        @map("inspection_form")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  section        Section      @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  features       MapFeature[]
+
+  @@map("map_feature_types")
 }
 
 model MapFeature {
-  id          String       @id @default(uuid())
-  type        String      // "Point", "LineString", "Polygon"
-  geometry    Json        // GeoJSON geometry
-  properties  Json
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id          String          @id @default(uuid())
+  typeId      String         @map("type_id")
+  geometry    Json           @db.JsonB
+  properties  Json           @default("{}") @db.JsonB
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+  type        MapFeatureType @relation(fields: [typeId], references: [id], onDelete: Cascade)
+  inspections Inspection[]
+  photos      FeaturePhoto[]
   submissions Submission[]
+
+  @@map("map_features")
+}
+
+model Inspection {
+  id        String            @id @default(uuid())
+  featureId String           @map("feature_id")
+  data      Json             @default("{}") @db.JsonB
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+  feature   MapFeature       @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  photos    InspectionPhoto[]
+
+  @@map("inspections")
+}
+
+model Icon {
+  id        String   @id @default(uuid())
+  name      String
+  url       String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("icons")
+}
+
+model FeaturePhoto {
+  id          String     @id @default(uuid())
+  url         String
+  location    Json?      @db.JsonB
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  featureId   String     @map("feature_id")
+  mapFeature  MapFeature @relation(fields: [featureId], references: [id], onDelete: Cascade)
+
+  @@map("feature_photos")
+}
+
+model InspectionPhoto {
+  id           String     @id @default(uuid())
+  url          String
+  location     Json?      @db.JsonB
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  inspectionId String     @map("inspection_id")
+  inspection   Inspection @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+
+  @@map("inspection_photos")
 }
 
 model Submission {
   id           String     @id @default(uuid())
-  data         Json
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  form         Form       @relation(fields: [formId], references: [id])
-  formId       String
-  mapFeature   MapFeature @relation(fields: [mapFeatureId], references: [id])
-  mapFeatureId String
+  formId       String     @map("form_id")
+  mapFeatureId String     @map("map_feature_id")
+  data         Json       @db.JsonB
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  form         Form       @relation(fields: [formId], references: [id], onDelete: Cascade)
+  mapFeature   MapFeature @relation(fields: [mapFeatureId], references: [id], onDelete: Cascade)
+
+  @@map("submissions")
 } 

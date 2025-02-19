@@ -48,14 +48,25 @@ export const fetchMapFeatureTypes = createAsyncThunk(
 
 export const createSection = createAsyncThunk(
   'schema/createSection',
-  async (section: Database['public']['Tables']['sections']['Insert']) => {
+  async (section: { name: string; description: string | null }) => {
     const { data, error } = await supabase
       .from('sections')
-      .insert(section)
+      .insert([{
+        name: section.name,
+        description: section.description,
+      }])
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error creating section:', error);
+      throw new Error(error.message);
+    }
+
+    if (!data) {
+      throw new Error('No data returned from insert operation');
+    }
+
     return data;
   }
 );
